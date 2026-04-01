@@ -152,6 +152,20 @@ function generateShareCard({ stat, isDark }) {
     }
   }
 
+  // ── Body (descriptor) ───────────────────────────────────────────────────
+  if (stat.body) {
+    ty += 20;
+    const bodySize = 22;
+    const bodyLineH = bodySize * 1.35;
+    ctx.font = `400 ${bodySize}px "Karla", system-ui, sans-serif`;
+    ctx.fillStyle = fgSub;
+    const bodyLines = wrapText(ctx, stat.body, textW);
+    for (const line of bodyLines) {
+      ctx.fillText(line, PAD, ty);
+      ty += bodyLineH;
+    }
+  }
+
   // ── Source ──────────────────────────────────────────────────────────────
   ty += 14;
   ctx.font = `400 20px "Karla", system-ui, sans-serif`;
