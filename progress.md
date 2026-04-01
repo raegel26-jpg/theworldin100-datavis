@@ -1,9 +1,9 @@
 # World in 100 — Development Progress
 
-Updated: 2026-04-01 (session 5)
+Updated: 2026-04-01 (session 6)
 
 ## Overall Status
-Core desktop experience polished and mobile-ready. All 12 themes functional with shape silhouettes. Design system: Gambetta + Karla, warm amber palette. Modes card, challenge mode, fog mode, share card all working. Lasso redesigned as boundary-based (only closes when user draws back to start). Mobile audit complete. Stats cleaned up — awkward headlines rewritten, near-duplicates removed, 3 new themes added (inequality, women & girls, children). Share card hardened for iOS. Theme picker resized smaller and centered. Full stat audit completed — 6 data accuracy fixes applied.
+Core desktop experience polished and mobile-ready. All 12 themes functional with shape silhouettes. Design system: Gambetta + Karla, warm amber palette. Modes card, challenge mode, fog mode, share card all working. Lasso redesigned as boundary-based (only closes when user draws back to start). Mobile audit complete. Stats cleaned up — awkward headlines rewritten, near-duplicates removed, 3 new themes added (inequality, women & girls, children). Share card hardened for iOS. Theme picker resized smaller and centered. Full stat audit completed — 6 data accuracy fixes applied. Mobile spacing fixed with viewport-relative units. Share card text block fully centered. 29 new stats added to fill coverage gaps across all themes.
 
 ## How to Update This Document
 
@@ -60,6 +60,7 @@ Core desktop experience polished and mobile-ready. All 12 themes functional with
 - 2026-03-31 — **Share button split**: "Share" → Web Share API with URL; "Save image" → 1080×1080 PNG
 - 2026-03-31 — **Share card redesigned**: Left/right split layout; Gambetta font
 - 2026-04-01 — **Share card spacing tightened**: Gap after "X in 100" line increased to +18px; source gap reduced to 14px; `blockH` recalculated to match
+- 2026-04-01 — **Share card text block centered**: Entire content (headline + body + source) measured as a unit and vertically centered with clamping to prevent footer overlap
 - 2026-04-01 — **Font loading hardened**: `Promise.race` with 1.5s timeout so canvas draw proceeds even if fonts fail to load
 - 2026-04-01 — **iOS share fallback**: Web Share API rejection now falls back to clipboard copy instead of silently failing
 
@@ -69,6 +70,9 @@ Core desktop experience polished and mobile-ready. All 12 themes functional with
 - 2026-04-01 — **OG + Twitter Card tags**: og:title, og:description, og:type, twitter:card, twitter:title, twitter:description
 - 2026-04-01 — **Favicon**: Outlined globe SVG in accent amber (`#c47d18`)
 - 2026-04-01 — **Theme picker close button**: SVG X icon instead of `&times;` character
+
+### Mobile spacing (2026-04-01)
+- **Viewport-relative stat padding**: Mobile `.reveal-panel__stat` uses `4vh` top padding + `justify-content: flex-start` for consistent spacing below section divider across all screen heights
 
 ### Mobile readiness (2026-04-01)
 - **Dot animation area**: Uses top 40% of screen on mobile (<768px) instead of collapsed left-half
@@ -80,7 +84,7 @@ Core desktop experience polished and mobile-ready. All 12 themes functional with
 - **Lasso snap threshold**: 65px on touch vs 40px on desktop
 
 ### Stats database
-- 2026-03-30 — **8 themes, 110+ stats**: mental_health, climate, hunger, education, health, work_life, ai_tech, universal
+- 2026-03-30 — **8 themes, 110+ stats → 12 themes, 165+ stats**: mental_health, climate, hunger, education, health, work_life, ai_tech, social, inequality, women_girls, children, universal
 - 2026-04-01 — **Water replaced with Social**: 10 stats covering loneliness, friendship, relationships, parenting, care, trust. Sources: WHO, Meta-Gallup, Ipsos, BBC, Gottman Institute, ILO, WHR. Shape: Lucide `users` icon.
 - 2026-04-01 — **3 new themes added**: inequality (10 stats, iq_01–iq_10), women_girls (10 stats, wg_01–wg_10), children (10 stats, ch_01–ch_10). Total: 12 themes.
 - 2026-04-01 — **3 awkward headlines rewritten**: cl_01 (dollars of GDP → dollars the world earns), at_01 (units of electricity → the world's electricity), cl_16 (units of energy → the world's energy)
@@ -96,6 +100,7 @@ Core desktop experience polished and mobile-ready. All 12 themes functional with
 | `src/main.js` | State machine: arena → lasso → theme-pick → reveal; wires up all mode controls |
 | `src/canvas/arena.js` | Physics loop, 100 circles, elastic collisions, `animateToPositions`, `fadeOutUncaptured`, fog mode (mouse + touch), speed multiplier |
 | `src/canvas/lasso.js` | Freehand draw, boundary-based closure detection, live barrier deflection, polygon capture, Ramer-Douglas-Peucker simplification |
+| `src/analytics.js` | Vercel Analytics (`inject()`) + custom event tracking via `track()` |
 | `src/data/loader.js` | All stat data + `findClosestStat` |
 | `src/data/silhouettes.js` | SVG path parser + all 9 theme shapes; `getShape()` returns outline + positions; largest-remainder dot sampling; centroid inset |
 | `src/ui/reveal.js` | Reveal animation sequence, dot ratio grid, hides modes tray |
@@ -139,6 +144,12 @@ Core desktop experience polished and mobile-ready. All 12 themes functional with
 - [x] Fixed ch_10 headline/body mismatch (n=85 but body said 83%)
 - [x] Fixed mh_05 global vs HIC framing (added "high-income countries" qualifier)
 - [x] Fixed iq_03 headline for regex compatibility (challenge masking + gold highlight)
+- [x] Vercel Analytics: `@vercel/analytics` installed, `inject()` called in analytics.js, custom `track()` events (lasso_complete, theme_selected) wired through
+
+### Done (session 6)
+- [x] Mobile stat spacing: replaced fixed `padding-top: 24px` with `4vh` + `justify-content: flex-start` for consistent spacing below section divider across all mobile screen heights
+- [x] Share card layout: entire text block (headline + body + source) measured and centered as a unit with clamping to prevent footer overlap
+- [x] 29 new stats added across 9 themes to fill coverage gaps (social, inequality, women_girls, children, mental_health, health, hunger, work_life, ai_tech)
 
 ### Remaining
 - [ ] OG preview image: save a screenshot to `public/og-image.png` (meta tags wired, image file needed)
