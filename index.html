@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="If the world were 100 people — draw to discover." />
+    <meta property="og:title" content="The World in 100" />
+    <meta property="og:description" content="If the world were 100 people — draw to discover." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:title" content="The World in 100" />
+    <meta name="twitter:description" content="If the world were 100 people — draw to discover." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23c47d18' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><path d='M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20'/><path d='M2 12h20'/></svg>" />
+    <title>The World in 100</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Gambetta:ital,wght@0,300..700;1,300..700&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+    <link rel="stylesheet" href="/src/styles/themes.css" />
+  </head>
+  <body>
+    <!-- Top bar: theme toggle -->
+    <header class="top-bar">
+      <button class="theme-toggle" id="mode-toggle" aria-label="Toggle dark/light mode">
+        <span class="theme-toggle__knob"></span>
+      </button>
+    </header>
+
+    <!-- Modes card (bottom left) -->
+    <div class="modes-card" id="modes-tray">
+      <p class="modes-card__header">Modes</p>
+      <div class="modes-card__row">
+        <div class="modes-card__label-group">
+          <span class="modes-card__label">Find the answer</span>
+          <span class="modes-card__sub">Guess before the reveal</span>
+        </div>
+        <button class="toggle-switch" id="challenge-btn" role="switch" aria-checked="false" aria-label="Challenge mode"></button>
+      </div>
+      <div class="modes-card__row modes-card__row--pace">
+        <div class="modes-card__pace-top">
+          <span class="modes-card__label">Pace</span>
+          <span class="modes-card__sub" id="pace-readout">1.0×</span>
+        </div>
+        <input class="modes-card__slider" type="range" id="speed-slider" min="1" max="100" value="30" aria-label="Dot speed">
+      </div>
+      <div class="modes-card__row">
+        <div class="modes-card__label-group">
+          <span class="modes-card__label">Seek</span>
+          <span class="modes-card__sub">Dots hide until you're close</span>
+        </div>
+        <button class="toggle-switch" id="fog-btn" role="switch" aria-checked="false" aria-label="Fog mode"></button>
+      </div>
+    </div>
+
+    <!-- Main canvas: arena + lasso -->
+    <canvas id="arena-canvas"></canvas>
+
+    <!-- Instruction hint (fades in after 2s, disappears on draw) -->
+    <p class="instruction" id="instruction">Draw around any number of dots.</p>
+
+    <!-- Count badge (shown after lasso closes) -->
+    <div class="count-badge hidden" id="count-badge">
+      <span id="count-number">0</span> people
+    </div>
+
+    <!-- Theme picker overlay -->
+    <div class="theme-picker hidden" id="theme-picker">
+      <div class="theme-picker__inner">
+        <button class="theme-picker__close" id="theme-picker-close" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        <p class="theme-picker__label">Where does your mind go?</p>
+        <div class="theme-picker__options" id="theme-options"></div>
+      </div>
+    </div>
+
+    <!-- Reveal panel -->
+    <div class="reveal-panel hidden" id="reveal-panel">
+      <span class="reveal-panel__count hidden" id="reveal-count"></span>
+      <div class="reveal-panel__stat">
+        <h1 class="stat-headline" id="stat-headline"></h1>
+        <p class="stat-body" id="stat-body"></p>
+        <p class="stat-source" id="stat-source"></p>
+        <a class="stat-readmore" id="stat-readmore" href="#" target="_blank" rel="noopener">Read more here</a>
+        <div class="dot-ratio" id="dot-ratio"></div>
+        <div class="reveal-panel__actions">
+          <button class="btn-text" id="restart-btn">Draw again</button>
+          <button class="btn-text" id="download-btn">Save image</button>
+          <button class="btn-primary" id="share-btn">Share</button>
+        </div>
+        <p class="stat-byline">The World in 100<br><span class="stat-byline__sub">A project by @raegelnotrachel</span></p>
+      </div>
+    </div>
+
+    <!-- Challenge comparison overlay -->
+    <div class="challenge-compare hidden" id="challenge-compare">
+      <div class="challenge-compare__card">
+        <p class="challenge-compare__question" id="challenge-question"></p>
+        <div class="challenge-compare__numbers">
+          <div class="challenge-compare__col">
+            <span class="challenge-compare__label">You</span>
+            <span class="challenge-compare__count" id="challenge-user-count">0</span>
+          </div>
+          <span class="challenge-compare__arrow">→</span>
+          <div class="challenge-compare__col">
+            <span class="challenge-compare__label">Answer</span>
+            <span class="challenge-compare__count challenge-compare__count--answer" id="challenge-answer">0</span>
+          </div>
+        </div>
+        <p class="challenge-compare__verdict" id="challenge-verdict"></p>
+        <button class="btn-primary" id="challenge-continue-btn">See the full story</button>
+      </div>
+    </div>
+
+    <!-- Share toast -->
+    <div class="toast hidden" id="share-toast">Image copied.</div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
