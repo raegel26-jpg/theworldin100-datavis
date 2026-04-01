@@ -57,12 +57,16 @@ export function initLasso(canvas, circles) {
     path = simplifyPath(path, 3);
     if (path.length < 3) { path = null; return; }
 
-    // Determine closure: snap to start if close enough
+    // Only complete if the user drew back near the start point (closed loop)
     isClosed = distBetween(path[0], path[path.length - 1]) < CLOSE_THRESHOLD;
-    if (isClosed) {
-      // Snap last point to first for a clean close
-      path[path.length - 1] = { ...path[0] };
+    if (!isClosed) {
+      // Open path — discard, not a valid lasso
+      path = null;
+      return;
     }
+
+    // Snap last point to first for a clean close
+    path[path.length - 1] = { ...path[0] };
 
     const capturedIndices = [];
     for (let i = 0; i < circles.length; i++) {
