@@ -409,41 +409,6 @@ html, body {
   }
 }
 
-/* ─── Challenge count overlay ───────────────────────────────────────────── */
-
-.reveal-panel__count {
-  position: absolute;
-  z-index: 160;
-  font-family: var(--serif);
-  font-weight: 700;
-  color: var(--accent);
-  opacity: 0;
-  transition: opacity 0.6s ease;
-  pointer-events: none;
-}
-
-.reveal-panel__count.visible {
-  opacity: 1;
-}
-
-@media (max-width: 767px) {
-  .reveal-panel__count {
-    top: calc(15% + 25px);
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 64px;
-  }
-}
-
-@media (min-width: 768px) {
-  .reveal-panel__count {
-    top: 50%;
-    left: 25%;
-    transform: translate(-50%, -50%);
-    font-size: 120px;
-  }
-}
-
 /* Left half — canvas area, nothing rendered */
 .reveal-panel::before {
   content: '';
@@ -937,7 +902,7 @@ html, body {
 
   .reveal-panel__stat {
     flex: 1 1 70%;
-    padding: 24px 24px 80px;
+    padding: 24px 90px 80px;
     overflow-y: auto;
     border-top: 1px solid var(--border);
     transform: translateY(12px);

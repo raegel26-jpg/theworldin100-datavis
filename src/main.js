@@ -300,19 +300,6 @@ function handleThemeSelected(themeKey, preSelectedStat = null, fromChallenge = f
     arena.animateToPositions(capturedIndices, leftHalfPositions(capturedCount, shapeBounds), isMobile ? 4 : 6);
   }
 
-  // Show correct count overlay in challenge mode
-  const revealCount = document.getElementById('reveal-count');
-  if (revealCount) {
-    if (fromChallenge) {
-      revealCount.textContent = stat.n;
-      revealCount.classList.remove('hidden');
-      setTimeout(() => revealCount.classList.add('visible'), 400);
-    } else {
-      revealCount.classList.add('hidden');
-      revealCount.classList.remove('visible');
-    }
-  }
-
   playReveal({ stat, capturedCount, capturedIndices, circles: arena.circles });
 }
 
