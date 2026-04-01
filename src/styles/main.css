@@ -910,10 +910,11 @@ html, body {
 
   .reveal-panel__stat {
     flex: 1 1 70%;
-    padding: 24px 90px 80px;
+    padding: 4vh 90px 80px;
     overflow-y: auto;
     border-top: 1px solid var(--border);
     transform: translateY(12px);
+    justify-content: flex-start;
   }
 
   .reveal-panel.stat-visible .reveal-panel__stat {

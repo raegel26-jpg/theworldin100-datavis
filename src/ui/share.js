@@ -117,17 +117,38 @@ function generateShareCard({ stat, isDark }) {
   const bigSize  = 84;
   const restSize = 40;
   const lineH    = restSize * 1.05;
+  const bodySize = 22;
+  const bodyLineH = bodySize * 1.35;
+  const sourceSize = 20;
 
-  // measure wrapped rest to find total text block height
+  // measure all text to compute total block height
   const headlineMatch = stat.headline.match(/^(\d+ in \d+)(.*)/);
   const bigPart  = headlineMatch ? headlineMatch[1] : stat.headline;
   const restPart = headlineMatch ? headlineMatch[2].trimStart() : '';
 
   ctx.font = `400 ${restSize}px "Gambetta", Georgia, serif`;
   const restLines = restPart ? wrapText(ctx, restPart, textW) : [];
-  const blockH = bigSize * 0.95 + 18 + restLines.length * lineH;
 
-  let ty = SIZE / 2 - blockH / 2 + 20; // slight downward nudge to feel optically centred
+  let headlineH;
+  let fallbackLines = [];
+  if (headlineMatch) {
+    headlineH = bigSize * 0.95 + 18 + restLines.length * lineH;
+  } else {
+    ctx.font = `600 ${bigSize}px "Gambetta", Georgia, serif`;
+    fallbackLines = wrapText(ctx, stat.headline, textW);
+    headlineH = fallbackLines.length * bigSize;
+  }
+
+  ctx.font = `400 ${bodySize}px "Karla", system-ui, sans-serif`;
+  const bodyLines = stat.body ? wrapText(ctx, stat.body, textW) : [];
+  const bodyH = bodyLines.length > 0 ? 20 + bodyLines.length * bodyLineH : 0;
+  const sourceH = 14 + sourceSize;
+
+  const totalH = headlineH + bodyH + sourceH;
+  const minY = PAD + 40; // below project name
+  const maxY = SIZE - PAD - 30; // above footer
+  let ty = Math.max(minY, Math.min((SIZE - totalH) / 2 + 20, maxY - totalH));
+
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
 
@@ -146,20 +167,17 @@ function generateShareCard({ stat, isDark }) {
   } else {
     ctx.font = `600 ${bigSize}px "Gambetta", Georgia, serif`;
     ctx.fillStyle = fg;
-    for (const line of wrapText(ctx, stat.headline, textW)) {
+    for (const line of fallbackLines) {
       ctx.fillText(line, PAD, ty);
       ty += bigSize * 1.0;
     }
   }
 
   // ── Body (descriptor) ───────────────────────────────────────────────────
-  if (stat.body) {
+  if (bodyLines.length > 0) {
     ty += 20;
-    const bodySize = 22;
-    const bodyLineH = bodySize * 1.35;
     ctx.font = `400 ${bodySize}px "Karla", system-ui, sans-serif`;
     ctx.fillStyle = fgSub;
-    const bodyLines = wrapText(ctx, stat.body, textW);
     for (const line of bodyLines) {
       ctx.fillText(line, PAD, ty);
       ty += bodyLineH;
@@ -168,7 +186,7 @@ function generateShareCard({ stat, isDark }) {
 
   // ── Source ──────────────────────────────────────────────────────────────
   ty += 14;
-  ctx.font = `400 20px "Karla", system-ui, sans-serif`;
+  ctx.font = `400 ${sourceSize}px "Karla", system-ui, sans-serif`;
   ctx.fillStyle = fgSub;
   ctx.fillText(stat.source, PAD, ty);
 
