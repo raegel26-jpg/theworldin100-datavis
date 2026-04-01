@@ -353,6 +353,14 @@ html, body {
   gap: 8px;
 }
 
+.theme-picker__empty {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--text-sub);
+  text-align: center;
+  padding: 12px 0;
+}
+
 /* Theme card — rendered by JS into #theme-options */
 .theme-card {
   display: flex;

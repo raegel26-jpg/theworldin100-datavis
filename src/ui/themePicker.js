@@ -6,10 +6,27 @@ export function showThemePicker(stats, capturedCount) {
   const picker   = document.getElementById('theme-picker');
   const options  = document.getElementById('theme-options');
 
-  const themes = Object.entries(stats).filter(([key]) => key !== 'universal');
+  const themes = Object.entries(stats).filter(([key, theme]) =>
+    key !== 'universal' && theme.stats.some(s => s.n === capturedCount)
+  );
   const shuffled = [...themes].sort(() => Math.random() - 0.5).slice(0, 3);
 
   options.innerHTML = '';
+
+  if (shuffled.length === 0) {
+    options.innerHTML = '<p class="theme-picker__empty">No stories match that number. Try drawing a different amount.</p>';
+    picker.classList.remove('hidden');
+    const closeBtn = document.getElementById('theme-picker-close');
+    if (closeBtn) {
+      const onClose = () => {
+        picker.classList.add('hidden');
+        closeBtn.removeEventListener('click', onClose);
+        document.dispatchEvent(new CustomEvent('lasso:dismiss'));
+      };
+      closeBtn.addEventListener('click', onClose);
+    }
+    return;
+  }
 
   const iconMap = {
     mental_health: `<path d="M12 18V5"/><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/><path d="M18 18a4 4 0 0 0 2-7.464"/><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/><path d="M6 18a4 4 0 0 1-2-7.464"/>`,
