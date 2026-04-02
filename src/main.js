@@ -13,6 +13,8 @@ import { initShare, parseShareParams } from './ui/share.js'
 import { loadStats, findClosestStat }  from './data/loader.js'
 import { getShape }                    from './data/silhouettes.js'
 import { track }            from './analytics.js'
+import './styles/main.css'
+import './styles/themes.css'
 
 let state = 'arena';
 let pendingCapture = null; // { capturedCount, capturedIndices, lassoPath }

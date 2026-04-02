@@ -34,8 +34,8 @@ export function initLasso(canvas, circles) {
     e.preventDefault();
     path.push(getPos(e));
 
-    // Check if user has drawn back near start point
-    if (path.length > 10) {
+    // Check if user has drawn back near start point (sticky — once closed, stay closed)
+    if (!isClosed && path.length > 10) {
       isClosed = distBetween(path[0], path[path.length - 1]) < CLOSE_THRESHOLD;
     }
 
@@ -53,17 +53,29 @@ export function initLasso(canvas, circles) {
     canvas.dispatchEvent(new CustomEvent('lasso:drawend'));
     if (!path || path.length < 3) { path = null; return; }
 
-    // Simplify dense mouse path to avoid ray-casting floating-point errors
-    path = simplifyPath(path, 3);
-    if (path.length < 3) { path = null; return; }
-
-    // Only complete if the user drew back near the start point (closed loop)
+    // Check closure on the raw path before simplification.
+    // First try the endpoint; if that fails, scan backwards to find
+    // where the path last passed near the start (handles overshooting).
     isClosed = distBetween(path[0], path[path.length - 1]) < CLOSE_THRESHOLD;
+
+    if (!isClosed && path.length > 20) {
+      for (let i = path.length - 1; i >= 10; i--) {
+        if (distBetween(path[0], path[i]) < CLOSE_THRESHOLD) {
+          path = path.slice(0, i + 1);
+          isClosed = true;
+          break;
+        }
+      }
+    }
+
     if (!isClosed) {
-      // Open path — discard, not a valid lasso
       path = null;
       return;
     }
+
+    // Simplify dense mouse path to avoid ray-casting floating-point errors
+    path = simplifyPath(path, 3);
+    if (path.length < 3) { path = null; return; }
 
     // Snap last point to first for a clean close
     path[path.length - 1] = { ...path[0] };
