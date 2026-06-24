@@ -2,6 +2,8 @@
  * reveal.js — Reveal animation sequence
  */
 
+import { clampDotCount } from '../data/dots.js';
+
 // Cancel pending timers from any previous reveal so a fast restart
 // cannot apply stale class changes to a freshly-reset panel.
 let _pendingRevealTimers = [];
@@ -57,7 +59,7 @@ function renderDots(container, statN) {
   }
   container._dotTimers = [];
   container.innerHTML = '';
-  const safeN = Math.max(0, Math.min(100, Math.round(statN)));
+  const safeN = clampDotCount(statN);
   for (let i = 0; i < 100; i++) {
     const dot = document.createElement('span');
     dot.className = 'dot-ratio__dot' + (i < safeN ? ' captured' : '');

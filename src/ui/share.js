@@ -3,6 +3,7 @@
  */
 
 import { getShape } from '../data/silhouettes.js';
+import { clampDotCount } from '../data/dots.js';
 
 export function initShare() {
   const shareBtn    = document.getElementById('share-btn');
@@ -52,7 +53,13 @@ export function initShare() {
       ]),
       fontTimeout,
     ]).then(() => {
-      const card = generateShareCard(data);
+      let card;
+      try {
+        card = generateShareCard(data);
+      } catch (err) {
+        showToast(toast, 'Could not generate image.');
+        return;
+      }
       card.toBlob(blob => downloadPng(blob, toast), 'image/png');
     });
   });
@@ -86,7 +93,12 @@ function generateShareCard({ stat, isDark }) {
   const gridX    = MID + (SIZE - PAD - MID - GRID_W) / 2; // centred in right col
   const gridCY   = SIZE / 2 + 20; // slightly below centre
   const gridY    = gridCY - GRID_H / 2;
-  const statN    = typeof stat.n === 'number' ? stat.n : 0;
+  // Fail loud rather than paint a self-contradicting "0 in 100" card. Uses the
+  // same clamp as the reveal grid (dots.js) so the two surfaces never diverge.
+  if (!Number.isFinite(stat.n)) {
+    throw new Error(`share card: non-finite stat.n for ${stat.id}`);
+  }
+  const statN    = clampDotCount(stat.n);
 
   // ── Background ──────────────────────────────────────────────────────────
   ctx.fillStyle = bg;

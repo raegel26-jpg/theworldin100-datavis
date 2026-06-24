@@ -23,3 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# mock-loop design scratch (local only)
+.mock-loop/
+
+# playwright-mcp snapshot/screenshot scratch (local only)
+.playwright-mcp/

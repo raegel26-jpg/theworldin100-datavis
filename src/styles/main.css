@@ -428,7 +428,7 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 80px 150px 80px 72px;
+  padding: 80px clamp(48px, 9vw, 150px) 80px clamp(40px, 5vw, 72px);
   background: var(--bg);
   border-top: 1px solid var(--border);
   pointer-events: auto;
@@ -910,7 +910,7 @@ html, body {
 
   .reveal-panel__stat {
     flex: 1 1 70%;
-    padding: 4vh 90px 80px;
+    padding: 4vh clamp(20px, 7vw, 56px) 80px;
     overflow-y: auto;
     border-top: 1px solid var(--border);
     transform: translateY(12px);
@@ -930,12 +930,12 @@ html, body {
   }
 
   .stat-body {
-    font-size: 11px;
-    line-height: 1.3;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
   .stat-source {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .stat-readmore {
@@ -943,11 +943,11 @@ html, body {
   }
 
   .stat-byline {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .stat-byline__sub {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .reveal-panel__actions {
@@ -980,7 +980,7 @@ html, body {
   }
 
   .modes-card__header {
-    font-size: 8px;
+    font-size: 11px;
     padding: 0 12px 6px;
   }
 
@@ -995,13 +995,17 @@ html, body {
   }
 
   .modes-card__sub {
-    font-size: 8px;
+    font-size: 11px;
+  }
+
+  .theme-picker {
+    align-items: safe center;
   }
 
   .theme-picker__inner {
     max-width: 280px;
     padding: 18px 16px 24px;
-    max-height: 80vh;
+    max-height: calc(100dvh - 24px);
     overflow-y: auto;
   }
 
