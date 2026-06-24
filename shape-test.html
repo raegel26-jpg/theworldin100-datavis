@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Shape symmetry — before / after</title>
+<style>
+  body { background:#1a1a1a; color:#ddd; font-family:system-ui; margin:0; padding:16px; }
+  h2 { font-size:13px; margin:20px 0 6px; color:#c084fc; text-transform:capitalize; }
+  .row { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; }
+  .cell { background:#0e0e0e; border:1px solid #2a2a2a; border-radius:6px; overflow:hidden; }
+  .cell .cap { font-size:11px; padding:4px 6px; display:flex; justify-content:space-between; }
+  .before .cap { color:#e0726a; }
+  .after  .cap { color:#7bd88f; }
+  canvas { display:block; width:100%; }
+  .legend { font-size:12px; color:#999; margin-bottom:8px; }
+</style>
+</head>
+<head></head>
+<body>
+<div class="legend">Red axis = vertical center. <b style="color:#e0726a">BEFORE</b> = original sampling · <b style="color:#7bd88f">AFTER</b> = symmetry fix. Two counts shown per shape (low counts show the problem most).</div>
+<div id="root"></div>
+<script type="module">
+import { getShape } from '/src/data/silhouettes.js';
+
+const THEMES = ['health','work_life','education','ai_tech','mental_health','inequality','women_girls','children','social','hunger','climate'];
+const COUNTS = [25, 60];
+const W = 240, H = 240;
+const root = document.getElementById('root');
+
+function render(cv, shape) {
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  let minX=Infinity,maxX=-Infinity;
+  for (const p of shape.outline.flat()) { if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; }
+  const cx=(minX+maxX)/2;
+  ctx.strokeStyle='rgba(224,114,106,0.55)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,H); ctx.stroke();
+  ctx.strokeStyle='rgba(192,132,252,0.30)'; ctx.setLineDash([3,3]); ctx.lineWidth=1.5;
+  for (const sp of shape.outline){ if(sp.length<2)continue; ctx.beginPath(); sp.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke(); }
+  ctx.setLineDash([]);
+  for (const p of shape.positions){ ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fillStyle='#e2c275'; ctx.fill(); }
+}
+
+for (const theme of THEMES) {
+  const title=document.createElement('h2'); title.textContent=theme.replace(/_/g,' '); root.appendChild(title);
+  const row=document.createElement('div'); row.className='row'; root.appendChild(row);
+  for (const count of COUNTS) {
+    for (const [label, sym] of [['before',false],['after',true]]) {
+      const cell=document.createElement('div'); cell.className='cell '+label;
+      const cap=document.createElement('div'); cap.className='cap';
+      const shape=getShape(theme,count,{x:0,y:0,width:W,height:H},4,sym);
+      cap.innerHTML=`<span>${label} · n=${count}</span><span>${shape.positions.length} dots</span>`;
+      cell.appendChild(cap);
+      const cv=document.createElement('canvas'); cv.width=W; cv.height=H; cell.appendChild(cv);
+      row.appendChild(cell);
+      render(cv,shape);
+    }
+  }
+}
+</script>
+</body>
+</html>

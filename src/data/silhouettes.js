@@ -243,9 +243,18 @@ function sampleAlongPaths(pathArrays, totalCount) {
 
   let remaining = dotsForPaths - validPaths.length * 2;
   if (remaining < 0) {
-    // Fewer dots than 2-per-path minimum — distribute 1 per path until exhausted
-    const perPath = Math.max(1, Math.floor(dotsForPaths / validPaths.length));
-    for (const { pts } of validPaths) result.push(...sampleSinglePath(pts, perPath));
+    // Fewer dots than the 2-per-path minimum. Allocate exactly dotsForPaths
+    // across the paths, longest-first, so the rendered dot count equals the
+    // captured count (uniform per-path rounding used to silently drop the
+    // remainder, e.g. 9 dots over 8 paths rendered only 8).
+    const alloc = new Array(validPaths.length).fill(0);
+    const order = validPaths
+      .map((p, i) => ({ i, len: p.len }))
+      .sort((a, b) => b.len - a.len);
+    for (let k = 0; k < dotsForPaths; k++) alloc[order[k % order.length].i]++;
+    for (let i = 0; i < validPaths.length; i++) {
+      if (alloc[i] > 0) result.push(...sampleSinglePath(validPaths[i].pts, alloc[i]));
+    }
     return result.slice(0, totalCount);
   }
 
@@ -404,10 +413,13 @@ const SVG_SHAPES = {
 // ── Scale helpers ─────────────────────────────────────────────────────────
 
 function scalePaths(pathArrays, bounds) {
-  const pad = 60;
+  // Pad proportionally to the smaller bound and never let it exceed the bounds.
+  // A fixed 60px pad used to drive `size` negative on short/landscape viewports
+  // (e.g. 667x375 → size = -28.75), mirror-flipping the silhouette into a sliver.
+  const pad  = Math.min(60, bounds.width * 0.15, bounds.height * 0.15);
   const w = bounds.width - pad * 2;
   const h = bounds.height - pad * 2;
-  const size = Math.min(w, h);
+  const size = Math.max(0, Math.min(w, h));
   const ox = bounds.x + (bounds.width - size) / 2;
   const oy = bounds.y + (bounds.height - size) / 2;
   return pathArrays.map(pts => pts.map(p => ({ x: ox + p.x * size, y: oy + p.y * size })));
@@ -422,12 +434,19 @@ function scalePaths(pathArrays, bounds) {
  *   positions — evenly-sampled dot target positions, inset from the outline
  *               so that rendered dots don't visually protrude beyond the shape
  */
-export function getShape(themeKey, count, bounds, inset = 0) {
+export function getShape(themeKey, count, bounds, inset = 0, symmetrize = true) {
   const data = SVG_SHAPES[themeKey];
   if (!data) return null;
   const normalizedPaths = parseSVGPaths(data.paths, data.viewBox, data.rects, data.circles);
   const scaledPaths = scalePaths(normalizedPaths, bounds);
   let positions = sampleAlongPaths(scaledPaths, count);
+
+  // Snap dots to mirror-symmetry for icons whose outline is itself symmetric,
+  // so the formed shape doesn't look lopsided (worst at low dot counts).
+  // Self-gating: intentionally asymmetric icons (sun+cloud, apple, people) are skipped.
+  if (symmetrize && isOutlineSymmetric(scaledPaths)) {
+    positions = symmetrizePositions(positions, scaledPaths);
+  }
 
   if (inset > 0) {
     positions = insetTowardCentroid(positions, scaledPaths, inset);
@@ -437,6 +456,89 @@ export function getShape(themeKey, count, bounds, inset = 0) {
     outline: scaledPaths,
     positions,
   };
+}
+
+/**
+ * True when the outline is (near) mirror-symmetric about its vertical center axis.
+ * Measures the mean nearest-neighbour distance between each outline point and the
+ * mirrored point set, normalised by shape size.
+ */
+function isOutlineSymmetric(allPaths) {
+  const pts = allPaths.flat();
+  if (pts.length < 4) return false;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of pts) {
+    if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+  }
+  const cx = (minX + maxX) / 2;
+  const size = Math.max(maxX - minX, maxY - minY) || 1;
+  let sum = 0;
+  for (const p of pts) {
+    const mx = 2 * cx - p.x, my = p.y;
+    let best = Infinity;
+    for (const q of pts) {
+      const dx = q.x - mx, dy = q.y - my;
+      const d = dx * dx + dy * dy;
+      if (d < best) best = d;
+    }
+    sum += Math.sqrt(best);
+  }
+  return (sum / pts.length) / size < 0.02;
+}
+
+/**
+ * Rebuild the dot set so it is exactly mirror-symmetric about the outline's
+ * vertical center axis, preserving the dot count. Off-axis dots are folded onto
+ * one half, greedily paired by nearest-neighbour, and each pair is replaced by
+ * one dot of the pair plus its exact mirror (both land on the symmetric outline,
+ * so dots stay on the outline). Axis dots and any single odd leftover sit on the
+ * axis itself.
+ */
+function symmetrizePositions(positions, allPaths) {
+  const pts = allPaths.flat();
+  if (!pts.length) return positions;
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of pts) {
+    if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+  }
+  const cx = (minX + maxX) / 2;
+  const size = Math.max(maxX - minX, maxY - minY) || 1;
+  const axisTol = size * 0.025;
+
+  const axis = [];   // y of dots already on the center axis
+  const side = [];   // off-axis dots, folded to { d: |x-cx|, y }
+  for (const p of positions) {
+    if (Math.abs(p.x - cx) <= axisTol) axis.push(p.y);
+    else side.push({ d: Math.abs(p.x - cx), y: p.y });
+  }
+
+  const out = [];
+  const used = new Array(side.length).fill(false);
+  for (let i = 0; i < side.length; i++) {
+    if (used[i]) continue;
+    used[i] = true;
+    let best = -1, bestDist = Infinity;
+    for (let j = i + 1; j < side.length; j++) {
+      if (used[j]) continue;
+      const dd = side[i].d - side[j].d, dy = side[i].y - side[j].y;
+      const dist = dd * dd + dy * dy;
+      if (dist < bestDist) { bestDist = dist; best = j; }
+    }
+    if (best >= 0) {
+      used[best] = true;
+      // Keep dot i exactly where it is and mirror it; both lie on the symmetric
+      // outline, so no dot drifts inward.
+      const d = side[i].d, y = side[i].y;
+      out.push({ x: cx - d, y });
+      out.push({ x: cx + d, y });
+    } else {
+      axis.push(side[i].y); // odd leftover → place on the axis
+    }
+  }
+  for (const y of axis) out.push({ x: cx, y });
+  return out;
 }
 
 /**
