@@ -452,14 +452,73 @@ html, body {
   transform: translateX(0);
 }
 
+/* Editorial eyebrow + display figure (MIX v1) */
+.stat-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.stat-eyebrow__topic {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.stat-eyebrow__fig {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.stat-figline {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.stat-figure {
+  font-family: var(--serif);
+  font-size: clamp(72px, 9vw, 112px);
+  font-weight: 600;
+  line-height: 0.8;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+}
+
+.stat-figunit {
+  font-family: var(--serif);
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 400;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+/* Headline now reads as the editorial deck (the clause after "N in 100") */
 .stat-headline {
   font-family: var(--serif);
-  font-size: clamp(28px, 4vw, 48px);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 0.9;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 400;
+  letter-spacing: -0.008em;
+  line-height: 1.14;
   color: var(--text-h);
-  margin-bottom: 16px;
+  margin-bottom: 22px;
+  max-width: 24ch;
 }
 
 .stat-headline em {
@@ -481,18 +540,19 @@ html, body {
 }
 
 .stat-source {
-  font-size: 11px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
   color: var(--text);
-  opacity: 0.7;
-  margin-bottom: 8px;
+  opacity: 0.85;
 }
 
 .stat-readmore {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--accent);
   text-decoration: none;
-  font-weight: 500;
-  margin-bottom: 28px;
+  font-weight: 600;
+  white-space: nowrap;
   transition: opacity 0.15s;
 }
 
@@ -515,7 +575,41 @@ html, body {
 
 .dot-ratio.expanded {
   max-height: 120px;
-  margin-bottom: 36px;
+}
+
+.dot-ratio-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.dot-ratio__cap {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.dot-ratio.expanded + .dot-ratio__cap {
+  opacity: 1;
+}
+
+.stat-rule {
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 14px;
+}
+
+.stat-srcrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 30px;
 }
 
 .dot-ratio__dot {
@@ -543,7 +637,7 @@ html, body {
 .reveal-panel__actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 22px;
   flex-wrap: wrap;
   opacity: 0;
   transition: opacity 0.4s ease;
@@ -551,6 +645,24 @@ html, body {
 
 .reveal-panel.actions-visible .reveal-panel__actions {
   opacity: 1;
+}
+
+/* Draw again / Save image read as quiet text links; Share stays the amber button */
+.reveal-panel__actions .btn-text {
+  height: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.reveal-panel__actions .btn-text:hover {
+  background: transparent;
+  color: var(--text-h);
+}
+
+.reveal-panel__actions .btn-primary {
+  margin-left: auto;
 }
 
 /* ─── Text buttons ───────────────────────────────────────────────────────── */
@@ -919,6 +1031,22 @@ html, body {
 
   .reveal-panel.stat-visible .reveal-panel__stat {
     transform: translateY(0);
+  }
+
+  .stat-eyebrow {
+    margin-bottom: 16px;
+  }
+
+  .stat-figure {
+    font-size: 58px;
+  }
+
+  .stat-figunit {
+    font-size: 16px;
+  }
+
+  .dot-ratio__cap {
+    font-size: 12px;
   }
 
   .stat-headline {

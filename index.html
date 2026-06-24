@@ -77,11 +77,25 @@
     <!-- Reveal panel -->
     <div class="reveal-panel hidden" id="reveal-panel">
       <div class="reveal-panel__stat">
+        <div class="stat-eyebrow" id="stat-eyebrow">
+          <span class="stat-eyebrow__topic" id="stat-topic"></span>
+          <span class="stat-eyebrow__fig" id="stat-fig"></span>
+        </div>
+        <div class="stat-figline" id="stat-figline">
+          <span class="stat-figure" id="stat-figure"></span>
+          <span class="stat-figunit">in 100</span>
+        </div>
         <h1 class="stat-headline" id="stat-headline"></h1>
         <p class="stat-body" id="stat-body"></p>
-        <p class="stat-source" id="stat-source"></p>
-        <a class="stat-readmore" id="stat-readmore" href="#" target="_blank" rel="noopener">Read more here</a>
-        <div class="dot-ratio" id="dot-ratio"></div>
+        <div class="dot-ratio-row">
+          <div class="dot-ratio" id="dot-ratio"></div>
+          <span class="dot-ratio__cap" id="dot-cap"></span>
+        </div>
+        <div class="stat-rule"></div>
+        <div class="stat-srcrow">
+          <p class="stat-source" id="stat-source"></p>
+          <a class="stat-readmore" id="stat-readmore" href="#" target="_blank" rel="noopener">Read more →</a>
+        </div>
         <div class="reveal-panel__actions">
           <button class="btn-text" id="restart-btn">Draw again</button>
           <button class="btn-text" id="download-btn">Save image</button>

@@ -223,7 +223,8 @@ canvas.addEventListener('lasso:complete', ({ detail }) => {
       isDark: document.documentElement.getAttribute('data-theme') === 'dark',
     };
     arena.fadeOutUncaptured([]);
-    playReveal({ stat, capturedCount: 100, capturedIndices, circles: arena.circles });
+    playReveal({ stat, capturedCount: 100, capturedIndices, circles: arena.circles,
+      themeLabel: stats.universal.label, figNo: figNumber(stats.universal.stats, stat) });
     return;
   }
 
@@ -309,7 +310,15 @@ function handleThemeSelected(themeKey, preSelectedStat = null, fromChallenge = f
     arena.animateToPositions(capturedIndices, leftHalfPositions(capturedCount, shapeBounds), isMobile ? 4 : 6);
   }
 
-  playReveal({ stat, capturedCount, capturedIndices, circles: arena.circles });
+  playReveal({ stat, capturedCount, capturedIndices, circles: arena.circles,
+    themeLabel: stats[themeKey]?.label, figNo: figNumber(stats[themeKey]?.stats || [], stat) });
+}
+
+// Editorial figure number — the 1-based position of this stat within its theme,
+// zero-padded ("FIG. 07"). Matched by id so a pre-selected (challenge) stat resolves.
+function figNumber(themeStats, stat) {
+  const i = themeStats.findIndex(s => s.id === stat.id);
+  return String((i >= 0 ? i : 0) + 1).padStart(2, '0');
 }
 
 function leftHalfPositions(count, bounds) {

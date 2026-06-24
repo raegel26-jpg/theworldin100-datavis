@@ -8,7 +8,7 @@ import { clampDotCount } from '../data/dots.js';
 // cannot apply stale class changes to a freshly-reset panel.
 let _pendingRevealTimers = [];
 
-export function playReveal({ stat, capturedCount, capturedIndices, circles }) {
+export function playReveal({ stat, capturedCount, capturedIndices, circles, themeLabel, figNo }) {
   // Clear any in-flight timers from a previous call
   _pendingRevealTimers.forEach(id => clearTimeout(id));
   _pendingRevealTimers = [];
@@ -23,9 +23,32 @@ export function playReveal({ stat, capturedCount, capturedIndices, circles }) {
   const source   = document.getElementById('stat-source');
   const readmore = document.getElementById('stat-readmore');
   const dotRatio = document.getElementById('dot-ratio');
+  const eyebrowTopic = document.getElementById('stat-topic');
+  const eyebrowFig   = document.getElementById('stat-fig');
+  const figline      = document.getElementById('stat-figline');
+  const figure       = document.getElementById('stat-figure');
+  const dotCap       = document.getElementById('dot-cap');
 
-  const safeHeadline = stat.headline.replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
-  headline.innerHTML = safeHeadline.replace(/^(\d+ in \d+)(.*)/, '<em>$1</em><span class="stat-headline__rest">$2</span>');
+  const esc = s => s.replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+
+  // Editorial display figure: split "N in 100 <deck>" into a big number + deck.
+  // One stat (the universal full-100, "All 100 of us share one planet.") has no
+  // "N in 100" prefix — fall back to a plain serif headline with no figure.
+  const fig = stat.headline.match(/^(\d+)\s+in\s+100\s+(.+)$/);
+  if (fig) {
+    figure.textContent = fig[1];
+    headline.innerHTML = esc(fig[2]);
+    dotCap.textContent = `${fig[1]} of every 100`;
+    if (figline) figline.style.display = '';
+  } else {
+    headline.innerHTML = esc(stat.headline);
+    dotCap.textContent = '';
+    if (figline) figline.style.display = 'none';
+  }
+
+  if (eyebrowTopic) eyebrowTopic.textContent = themeLabel || '';
+  if (eyebrowFig)   eyebrowFig.textContent   = figNo ? `FIG. ${figNo}` : '';
+
   body.textContent     = stat.body;
   source.textContent   = stat.source;
   if (stat.sourceUrl) {
