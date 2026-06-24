@@ -10,7 +10,7 @@ import { initLasso }        from './canvas/lasso.js'
 import { showThemePicker }  from './ui/themePicker.js'
 import { playReveal }       from './ui/reveal.js'
 import { initShare, parseShareParams } from './ui/share.js'
-import { loadStats, findClosestStat }  from './data/loader.js'
+import { loadStats, findExactStat }    from './data/loader.js'
 import { getShape }                    from './data/silhouettes.js'
 import { track }            from './analytics.js'
 import './styles/main.css'
@@ -235,12 +235,19 @@ canvas.addEventListener('lasso:complete', ({ detail }) => {
 
 function handleThemeSelected(themeKey, preSelectedStat = null, fromChallenge = false) {
   if (!pendingCapture) return;
-  state = 'reveal';
 
   const { capturedCount, capturedIndices, lassoPath } = pendingCapture;
   const themeStats = stats[themeKey]?.stats || [];
-  const stat = preSelectedStat || findClosestStat(themeStats, capturedCount);
-  if (!stat) return;
+  const stat = preSelectedStat || findExactStat(themeStats, capturedCount);
+  // Resolve+validate BEFORE flipping into the reveal state. If no stat matches,
+  // never strand the viewer on a blank reveal — fall back to the theme picker's
+  // graceful empty state and stay interactive.
+  if (!stat) {
+    state = 'theme-pick';
+    showThemePicker(stats, capturedCount);
+    return;
+  }
+  state = 'reveal';
 
   window._shareData      = { theme: themeKey, capturedCount, statId: stat.id };
   window._shareImageData = {
@@ -347,11 +354,24 @@ document.addEventListener('lasso:dismiss', () => {
 const shared = parseShareParams();
 if (shared.theme && shared.capturedCount !== null) {
   const safeCount = Math.max(0, Math.min(100, Math.floor(shared.capturedCount)));
-  if (!isNaN(safeCount) && Object.keys(stats).includes(shared.theme)) {
+  const themeStats = stats[shared.theme]?.stats || [];
+
+  // Resolve the exact stat this link points at. Prefer the explicit statId (the
+  // precise pin) when it exists and agrees with the count; otherwise exact-match
+  // the count. Only replay when a real stat resolves — a stale/typo'd/hand-edited
+  // link must not strand the viewer on a blank reveal; it just lands in the arena.
+  let replayStat = null;
+  if (shared.statId) {
+    const byId = themeStats.find(s => s.id === shared.statId);
+    if (byId && byId.n === safeCount) replayStat = byId;
+  }
+  if (!replayStat) replayStat = findExactStat(themeStats, safeCount);
+
+  if (!isNaN(safeCount) && replayStat) {
     setTimeout(() => {
       const fakeIndices = Array.from({ length: safeCount }, (_, i) => i);
       pendingCapture = { capturedCount: safeCount, capturedIndices: fakeIndices, lassoPath: null };
-      handleThemeSelected(shared.theme);
+      handleThemeSelected(shared.theme, replayStat);
     }, 500);
   }
 }
