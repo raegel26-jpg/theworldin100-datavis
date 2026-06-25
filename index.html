@@ -61,8 +61,8 @@
     <p class="instruction" id="instruction">Draw around any number of dots.</p>
 
     <!-- Count badge (shown after lasso closes) -->
-    <div class="count-badge hidden" id="count-badge">
-      <span id="count-number">0</span> people
+    <div class="count-badge hidden" id="count-badge" data-label="people">
+      <span id="count-number">0</span>
     </div>
 
     <!-- Theme picker overlay -->
@@ -127,6 +127,12 @@
 
     <!-- Share toast -->
     <div class="toast hidden" id="share-toast">Image copied.</div>
+
+    <!-- Premise masthead (arena screen; hidden once a stat is revealed) -->
+    <div class="masthead" id="masthead">
+      <span class="masthead__name">The World in 100</span>
+      <span class="masthead__tag">If the world were 100 people.</span>
+    </div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

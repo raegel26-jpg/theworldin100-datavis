@@ -217,6 +217,8 @@ canvas.addEventListener('lasso:complete', ({ detail }) => {
     window._shareImageData = {
       stat,
       themeKey: 'universal',
+      themeLabel: stats.universal.label,
+      figNo: figNumber(stats.universal.stats, stat),
       capturedCount: 100,
       lassoPath,
       circleSnapshots: capturedIndices.map(i => ({ x: arena.circles[i].x, y: arena.circles[i].y })),
@@ -229,7 +231,16 @@ canvas.addEventListener('lasso:complete', ({ detail }) => {
   }
 
   state = 'theme-pick';
-  showThemePicker(stats, capturedCount);
+  // Count beat: flash "N people" so the link between the dots you drew and the
+  // upcoming "N in 100" stat is legible, then open the theme picker.
+  const badge = document.getElementById('count-badge');
+  const num   = document.getElementById('count-number');
+  if (num) num.textContent = capturedCount;
+  if (badge) badge.classList.remove('hidden');
+  setTimeout(() => {
+    if (badge) badge.classList.add('hidden');
+    if (state === 'theme-pick') showThemePicker(stats, capturedCount);
+  }, 850);
 });
 
 // ── Theme selected ─────────────────────────────────────────────────────────
@@ -254,6 +265,8 @@ function handleThemeSelected(themeKey, preSelectedStat = null, fromChallenge = f
   window._shareImageData = {
     stat,
     themeKey,
+    themeLabel: stats[themeKey]?.label,
+    figNo: figNumber(stats[themeKey]?.stats || [], stat),
     capturedCount,
     lassoPath: lassoPath || null,
     circleSnapshots: capturedIndices.map(i => ({ x: arena.circles[i].x, y: arena.circles[i].y })),

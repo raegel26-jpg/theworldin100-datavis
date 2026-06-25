@@ -49,7 +49,9 @@ export function initShare() {
       Promise.all([
         document.fonts.load('600 96px "Gambetta"'),
         document.fonts.load('400 56px "Gambetta"'),
+        document.fonts.load('italic 400 32px "Gambetta"'),
         document.fonts.load('500 22px "Karla"'),
+        document.fonts.load('600 22px "Karla"'),
       ]),
       fontTimeout,
     ]).then(() => {
@@ -67,7 +69,7 @@ export function initShare() {
   restartBtn?.addEventListener('click', () => window.location.reload());
 }
 
-function generateShareCard({ stat, isDark }) {
+function generateShareCard({ stat, isDark, themeLabel, figNo }) {
   const SIZE = 1080;
   const cv = document.createElement('canvas');
   cv.width = SIZE;
@@ -125,69 +127,100 @@ function generateShareCard({ stat, isDark }) {
     ctx.fill();
   }
 
-  // ── Headline (left column, vertically centred) ───────────────────────────
-  const bigSize  = 84;
-  const restSize = 40;
-  const lineH    = restSize * 1.05;
-  const bodySize = 22;
-  const bodyLineH = bodySize * 1.35;
-  const sourceSize = 20;
-
-  // measure all text to compute total block height
-  const headlineMatch = stat.headline.match(/^(\d+ in \d+)(.*)/);
-  const bigPart  = headlineMatch ? headlineMatch[1] : stat.headline;
-  const restPart = headlineMatch ? headlineMatch[2].trimStart() : '';
-
-  ctx.font = `400 ${restSize}px "Gambetta", Georgia, serif`;
-  const restLines = restPart ? wrapText(ctx, restPart, textW) : [];
-
-  let headlineH;
-  let fallbackLines = [];
-  if (headlineMatch) {
-    headlineH = bigSize * 0.95 + 18 + restLines.length * lineH;
-  } else {
-    ctx.font = `600 ${bigSize}px "Gambetta", Georgia, serif`;
-    fallbackLines = wrapText(ctx, stat.headline, textW);
-    headlineH = fallbackLines.length * bigSize;
+  // ── Dot grid caption ─────────────────────────────────────────────────────
+  const isFig = /^\d+\s+in\s+100\s+/.test(stat.headline);
+  if (isFig) {
+    ctx.font = `italic 400 22px "Gambetta", Georgia, serif`;
+    ctx.fillStyle = fgSub;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(`${statN} of every 100`, gridX + GRID_W / 2, gridY + GRID_H + 26);
+    ctx.textAlign = 'left';
   }
 
+  // ── Editorial text block (eyebrow · figure · deck · body · source) ────────
+  const figureSize  = 150;
+  const unitSize    = 40;
+  const deckSize    = 46;
+  const deckLineH   = deckSize * 1.08;
+  const bodySize    = 22;
+  const bodyLineH   = bodySize * 1.4;
+  const sourceSize  = 22;
+  const eyebrowSize = 20;
+
+  // Split "N in 100 <deck>" into a display figure + deck clause; the lone
+  // universal stat has no prefix, so it falls back to a plain serif headline.
+  const fm = stat.headline.match(/^(\d+)\s+in\s+100\s+(.+)$/);
+  const figText  = fm ? fm[1] : null;
+  const deckText = fm ? fm[2] : stat.headline;
+
+  ctx.font = `400 ${deckSize}px "Gambetta", Georgia, serif`;
+  const deckLines = wrapText(ctx, deckText, textW);
   ctx.font = `400 ${bodySize}px "Karla", system-ui, sans-serif`;
   const bodyLines = stat.body ? wrapText(ctx, stat.body, textW) : [];
-  const bodyH = bodyLines.length > 0 ? 20 + bodyLines.length * bodyLineH : 0;
-  const sourceH = 14 + sourceSize;
 
-  const totalH = headlineH + bodyH + sourceH;
-  const minY = PAD + 40; // below project name
-  const maxY = SIZE - PAD - 30; // above footer
-  let ty = Math.max(minY, Math.min((SIZE - totalH) / 2 + 20, maxY - totalH));
+  const eyebrowH = eyebrowSize + 18 + 26;             // label → rule → gap
+  const figureH  = figText ? figureSize * 0.80 + 16 : 0;
+  const deckH    = deckLines.length * deckLineH;
+  const bodyH    = bodyLines.length ? 24 + bodyLines.length * bodyLineH : 0;
+  const sourceH  = 22 + sourceSize;
+  const totalH   = eyebrowH + figureH + deckH + bodyH + sourceH;
+
+  const minY = PAD + 56;
+  const maxY = SIZE - PAD - 40;
+  let ty = Math.max(minY, Math.min((SIZE - totalH) / 2, maxY - totalH));
 
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
 
-  if (headlineMatch) {
-    ctx.font = `600 ${bigSize}px "Gambetta", Georgia, serif`;
-    ctx.fillStyle = accent;
-    ctx.fillText(bigPart, PAD, ty);
-    ty += bigSize * 0.95 + 18;
+  // eyebrow: topic label + figure number, then a hairline rule
+  ctx.font = `600 ${eyebrowSize}px "Karla", system-ui, sans-serif`;
+  ctx.fillStyle = accent;
+  ctx.letterSpacing = '3px';
+  const topic = (themeLabel || '').toUpperCase();
+  ctx.fillText(topic, PAD, ty);
+  const topicW = ctx.measureText(topic).width;
+  ctx.letterSpacing = '0px';
+  if (figNo) {
+    ctx.font = `400 ${eyebrowSize}px "Karla", system-ui, sans-serif`;
+    ctx.fillStyle = fgSub;
+    ctx.fillText(`FIG. ${figNo}`, PAD + topicW + 22, ty);
+  }
+  ty += eyebrowSize + 18;
+  ctx.strokeStyle = isDark ? 'rgba(243,244,246,0.18)' : 'rgba(29,36,56,0.16)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD, ty + 0.5);
+  ctx.lineTo(MID - 40, ty + 0.5);
+  ctx.stroke();
+  ty += 26;
 
-    ctx.font = `400 ${restSize}px "Gambetta", Georgia, serif`;
-    ctx.fillStyle = fg;
-    for (const line of restLines) {
-      ctx.fillText(line, PAD, ty);
-      ty += lineH;
-    }
-  } else {
-    ctx.font = `600 ${bigSize}px "Gambetta", Georgia, serif`;
-    ctx.fillStyle = fg;
-    for (const line of fallbackLines) {
-      ctx.fillText(line, PAD, ty);
-      ty += bigSize * 1.0;
-    }
+  // display figure: big "N" + "in 100" on a shared baseline
+  if (figText) {
+    const baseline = ty + figureSize * 0.80;
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = `600 ${figureSize}px "Gambetta", Georgia, serif`;
+    ctx.fillStyle = accent;
+    ctx.fillText(figText, PAD, baseline);
+    const figW = ctx.measureText(figText).width;
+    ctx.font = `400 ${unitSize}px "Gambetta", Georgia, serif`;
+    ctx.fillStyle = fgSub;
+    ctx.fillText('in 100', PAD + figW + 18, baseline);
+    ctx.textBaseline = 'top';
+    ty += figureSize * 0.80 + 16;
   }
 
-  // ── Body (descriptor) ───────────────────────────────────────────────────
-  if (bodyLines.length > 0) {
-    ty += 20;
+  // deck — the clause after "N in 100" (or the full headline in fallback)
+  ctx.font = `400 ${deckSize}px "Gambetta", Georgia, serif`;
+  ctx.fillStyle = fg;
+  for (const line of deckLines) {
+    ctx.fillText(line, PAD, ty);
+    ty += deckLineH;
+  }
+
+  // body (descriptor)
+  if (bodyLines.length) {
+    ty += 24;
     ctx.font = `400 ${bodySize}px "Karla", system-ui, sans-serif`;
     ctx.fillStyle = fgSub;
     for (const line of bodyLines) {
@@ -196,9 +229,9 @@ function generateShareCard({ stat, isDark }) {
     }
   }
 
-  // ── Source ──────────────────────────────────────────────────────────────
-  ty += 14;
-  ctx.font = `400 ${sourceSize}px "Karla", system-ui, sans-serif`;
+  // source — italic serif footnote
+  ty += 22;
+  ctx.font = `italic 400 ${sourceSize}px "Gambetta", Georgia, serif`;
   ctx.fillStyle = fgSub;
   ctx.fillText(stat.source, PAD, ty);
 
